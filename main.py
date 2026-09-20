@@ -33,7 +33,9 @@ def show_entries(entries: List[Dict[str, Any]]) -> None:
         return
     for entry in entries:
         status = get_day_status(entry["score"])
-        print(f"{entry['entry_date']} | Оценка: {entry['score']}/10 | {status}")
+        print(
+            f"{entry['entry_date']} | Оценка: {entry['score']}/10 | {status}"
+        )
         print(f"  Комментарий: {entry['comment']}")
 
 
