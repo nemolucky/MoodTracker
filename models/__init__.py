@@ -1,4 +1,4 @@
-from entries import MoodEntry
+from .entries import MoodEntry
 from .users import User
 
 __all__ = ["MoodEntry", "User"]
