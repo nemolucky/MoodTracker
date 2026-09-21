@@ -1,19 +1,20 @@
-from typing import Any, Dict, List
+"""Точка входа в приложение Mood Tracker (объектная модель)."""
+from typing import List
 
-from entries import (
-    add_mood_entry,
+from models import MoodEntry, User
+from models.entries import (
     filter_entries_by_score,
     find_entries_by_date,
     get_average_mood,
-    get_day_status,
     get_mood_trend,
     sort_entries_by_score,
 )
-from storage import load_entries, save_entries
+from models.users import add_user, find_user_by_id
+from storage import load_entries, load_users, save_entries, save_users
 from utils import input_date, input_int
 
-DATA_FILE = "data/entries.json"
-USER_NAME = "Denis"
+ENTRIES_FILE = "data/entries.json"
+USERS_FILE = "data/users.json"
 
 MENU = (
     "\n=== Mood Tracker ===\n"
@@ -23,32 +24,84 @@ MENU = (
     "4. Показать средний балл и тенденцию\n"
     "5. Отфильтровать по минимальной оценке\n"
     "6. Показать записи, отсортированные по оценке\n"
+    "7. Показать пользователей\n"
+    "8. Добавить пользователя\n"
     "0. Выход"
 )
 
 
-def show_entries(entries: List[Dict[str, Any]]) -> None:
+def show_entries(entries: List[MoodEntry]) -> None:
+    """Вывести список записей настроения."""
     if not entries:
         print("Записей пока нет.")
         return
     for entry in entries:
-        status = get_day_status(entry["score"])
-        print(
-            f"{entry['entry_date']} | Оценка: {entry['score']}/10 | {status}"
-        )
-        print(f"  Комментарий: {entry['comment']}")
+        print(entry)
+        print(f"  Комментарий: {entry.comment}")
 
 
-def show_summary(entries: List[Dict[str, Any]]) -> None:
+def show_users(users: List[User]) -> None:
+    """Вывести список пользователей."""
+    if not users:
+        print("Пользователей пока нет.")
+        return
+    for user in users:
+        print(f"{user.id}: {user}")
+
+
+def show_summary(entries: List[MoodEntry]) -> None:
+    """Вывести средний балл и тенденцию настроения."""
     average = get_average_mood(entries)
     print(f"Средний балл настроения: {average}/10")
-    print(f"Общая тенденция: {get_day_status(average)}")
     print(get_mood_trend(entries))
 
 
+def get_next_entry_id(entries: List[MoodEntry]) -> int:
+    """Вычислить идентификатор для новой записи."""
+    if not entries:
+        return 1
+    return max(entry.id for entry in entries) + 1
+
+
+def get_next_user_id(users: List[User]) -> int:
+    """Вычислить идентификатор для нового пользователя."""
+    if not users:
+        return 1
+    return max(user.id for user in users) + 1
+
+
+def create_new_entry(entries: List[MoodEntry], users: List[User]) -> None:
+    """Создать новую запись настроения, связав её с пользователем."""
+    show_users(users)
+    user_id = input_int(
+        "ID пользователя (0, если нужно создать нового): ",
+        min_value=0,
+        max_value=999,
+    )
+    user = find_user_by_id(users, user_id)
+    if user is None:
+        name = input("Имя нового пользователя: ")
+        email = input("Email (можно пропустить): ")
+        user = add_user(users, get_next_user_id(users), name, email)
+        print(f"Создан пользователь: {user}")
+
+    entry_date = input_date("Дата записи (ГГГГ-ММ-ДД): ")
+    score = input_int("Оценка (0-10): ")
+    comment = input("Комментарий: ")
+
+    entry_id = get_next_entry_id(entries)
+    new_entry = MoodEntry(entry_id, entry_date, score, comment, user)
+    entries.append(new_entry)
+    print(f"Добавлена запись: {new_entry}")
+
+
 def main() -> None:
-    entries = load_entries(DATA_FILE)
-    print(f"Пользователь: {USER_NAME}")
+    """Запустить главное меню приложения."""
+    users = load_users(USERS_FILE)
+    if not users:
+        users = [User(1, "Denis", "")]
+
+    entries = load_entries(ENTRIES_FILE, users)
 
     while True:
         print(MENU)
@@ -58,15 +111,9 @@ def main() -> None:
             show_entries(entries)
 
         elif choice == "2":
-            entry_date = input_date("Дата записи (ГГГГ-ММ-ДД): ")
-            score = input_int("Оценка (0-10): ")
-            comment = input("Комментарий: ")
-            new_entry = add_mood_entry(entries, entry_date, score, comment)
-            save_entries(DATA_FILE, entries)
-            print(
-                f"Добавлена запись: {new_entry['entry_date']} | "
-                f"Оценка: {new_entry['score']}/10"
-            )
+            create_new_entry(entries, users)
+            save_entries(ENTRIES_FILE, entries)
+            save_users(USERS_FILE, users)
 
         elif choice == "3":
             target_date = input_date("Дата для поиска (ГГГГ-ММ-ДД): ")
@@ -82,8 +129,19 @@ def main() -> None:
         elif choice == "6":
             show_entries(sort_entries_by_score(entries, reverse=True))
 
+        elif choice == "7":
+            show_users(users)
+
+        elif choice == "8":
+            name = input("Имя пользователя: ")
+            email = input("Email (можно пропустить): ")
+            user = add_user(users, get_next_user_id(users), name, email)
+            print(f"Добавлен пользователь: {user}")
+            save_users(USERS_FILE, users)
+
         elif choice == "0":
-            save_entries(DATA_FILE, entries)
+            save_entries(ENTRIES_FILE, entries)
+            save_users(USERS_FILE, users)
             print("Данные сохранены. До встречи!")
             break
 

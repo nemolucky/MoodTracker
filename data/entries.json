@@ -1,15 +1,21 @@
 [
     {
+        "id": 1,
+        "user_id": 1,
         "entry_date": "2026-09-13",
         "score": 8,
         "comment": "Отличная встреча с друзьями"
     },
     {
+        "id": 2,
+        "user_id": 1,
         "entry_date": "2026-09-14",
         "score": 5,
         "comment": "Обычный рабочий день"
     },
     {
+        "id": 3,
+        "user_id": 1,
         "entry_date": "2026-09-15",
         "score": 3,
         "comment": "Много задач, устал"
