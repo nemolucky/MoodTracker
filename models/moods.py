@@ -1,10 +1,13 @@
 """Модель для сущности Mood (Тип настроения)."""
 from typing import Any, Dict, List, Optional
 
+
 class Mood:
     """Представляет тип настроения (например, Радость, Грусть, Спокойствие)."""
-    
-    def __init__(self, mood_id: int, name: str, description: str = "") -> None:
+
+    def __init__(
+        self, mood_id: int, name: str, description: str = ""
+    ) -> None:
         self.id = mood_id
         self.name = name
         self.description = description
@@ -20,16 +23,21 @@ class Mood:
             description=data.get("description", ""),
         )
 
-def add_mood(moods: List[Mood], mood_id: int, name: str, description: str = "") -> Mood:
+
+def add_mood(
+    moods: List[Mood], mood_id: int, name: str, description: str = ""
+) -> Mood:
     new_mood = Mood(mood_id, name, description)
     moods.append(new_mood)
     return new_mood
+
 
 def find_mood_by_id(moods: List[Mood], mood_id: int) -> Optional[Mood]:
     for mood in moods:
         if mood.id == mood_id:
             return mood
     return None
+
 
 def find_mood_by_name(moods: List[Mood], name: str) -> Optional[Mood]:
     name_lower = name.lower()

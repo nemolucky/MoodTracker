@@ -9,18 +9,18 @@ from models.entries import (
     get_mood_trend,
     sort_entries_by_score,
 )
-from models.users import add_user, find_user_by_id
-from models.moods import Mood, add_mood, find_mood_by_id
 from models.factors import Factor, add_factor, find_factor_by_id
+from models.moods import Mood, add_mood, find_mood_by_id
+from models.users import add_user, find_user_by_id
 from storage import (
-    load_entries, 
-    load_users, 
-    save_entries, 
-    save_users,
-    load_moods, 
-    save_moods,
+    load_entries,
     load_factors,
-    save_factors
+    load_moods,
+    load_users,
+    save_entries,
+    save_factors,
+    save_moods,
+    save_users,
 )
 from utils import input_date, input_int
 
@@ -44,6 +44,7 @@ MENU = (
     "0. Выход"
 )
 
+
 def show_entries(entries: List[MoodEntry]) -> None:
     """Вывести список записей настроения."""
     if not entries:
@@ -53,6 +54,7 @@ def show_entries(entries: List[MoodEntry]) -> None:
         print(entry)
         print(f"  Комментарий: {entry.comment}")
 
+
 def show_users(users: List[User]) -> None:
     """Вывести список пользователей."""
     if not users:
@@ -60,6 +62,7 @@ def show_users(users: List[User]) -> None:
         return
     for user in users:
         print(f"{user.id}: {user}")
+
 
 def show_moods(moods: List[Mood]) -> None:
     """Вывести список типов настроения."""
@@ -69,6 +72,7 @@ def show_moods(moods: List[Mood]) -> None:
     for mood in moods:
         print(f"{mood.id}. {mood.name} - {mood.description}")
 
+
 def show_factors(factors: List[Factor]) -> None:
     """Вывести список факторов."""
     if not factors:
@@ -77,11 +81,13 @@ def show_factors(factors: List[Factor]) -> None:
     for factor in factors:
         print(f"{factor.id}. {factor.name} ({factor.category})")
 
+
 def show_summary(entries: List[MoodEntry]) -> None:
     """Вывести средний балл и тенденцию настроения."""
     average = get_average_mood(entries)
     print(f"Средний балл настроения: {average}/10")
     print(get_mood_trend(entries))
+
 
 def get_next_entry_id(entries: List[MoodEntry]) -> int:
     """Вычислить идентификатор для новой записи."""
@@ -89,36 +95,43 @@ def get_next_entry_id(entries: List[MoodEntry]) -> int:
         return 1
     return max(entry.id for entry in entries) + 1
 
+
 def get_next_user_id(users: List[User]) -> int:
     """Вычислить идентификатор для нового пользователя."""
     if not users:
         return 1
     return max(user.id for user in users) + 1
 
+
 def get_next_mood_id(moods: List[Mood]) -> int:
     if not moods:
         return 1
     return max(m.id for m in moods) + 1
+
 
 def get_next_factor_id(factors: List[Factor]) -> int:
     if not factors:
         return 1
     return max(f.id for f in factors) + 1
 
+
 def select_mood(moods: List[Mood]) -> Optional[Mood]:
     """Помощник для выбора настроения из списка."""
     if not moods:
         print("Настроения еще не добавлены.")
         return None
-        
+
     print("\nДоступные типы настроения:")
     for m in moods:
         print(f"{m.id}. {m.name}")
-    
-    mood_id = input_int("Выберите ID настроения (0, если не указано): ", 0, 999)
+
+    mood_id = input_int(
+        "Выберите ID настроения (0, если не указано): ", 0, 999
+    )
     if mood_id == 0:
         return None
     return find_mood_by_id(moods, mood_id)
+
 
 def select_factors(factors: List[Factor]) -> List[Factor]:
     """Помощник для выбора нескольких факторов."""
@@ -129,10 +142,12 @@ def select_factors(factors: List[Factor]) -> List[Factor]:
     print("\nДоступные факторы:")
     for f in factors:
         print(f"{f.id}. {f.name} ({f.category})")
-    
+
     selected = []
     while True:
-        fid = input_int("Выберите ID фактора (0 для завершения выбора): ", 0, 999)
+        fid = input_int(
+            "Выберите ID фактора (0 для завершения выбора): ", 0, 999
+        )
         if fid == 0:
             break
         factor = find_factor_by_id(factors, fid)
@@ -145,13 +160,14 @@ def select_factors(factors: List[Factor]) -> List[Factor]:
             print("Фактор с таким ID не найден.")
     return selected
 
+
 def create_new_entry(
-    entries: List[MoodEntry], 
-    users: List[User], 
-    moods: List[Mood], 
-    factors: List[Factor]
+    entries: List[MoodEntry],
+    users: List[User],
+    moods: List[Mood],
+    factors: List[Factor],
 ) -> None:
-    """Создать новую запись настроения, связав её с пользователем, настроением и факторами."""
+    """Создать новую запись настроения."""
     show_users(users)
     user_id = input_int(
         "ID пользователя (0, если нужно создать нового): ",
@@ -175,9 +191,12 @@ def create_new_entry(
 
     entry_id = get_next_entry_id(entries)
     # Передаем новые аргументы в конструктор
-    new_entry = MoodEntry(entry_id, entry_date, score, comment, user, mood, selected_factors)
+    new_entry = MoodEntry(
+        entry_id, entry_date, score, comment, user, mood, selected_factors
+    )
     entries.append(new_entry)
     print(f"Добавлена запись: {new_entry}")
+
 
 def manage_moods(moods: List[Mood]) -> None:
     """Простое управление списком настроений."""
@@ -187,13 +206,14 @@ def manage_moods(moods: List[Mood]) -> None:
         print("1. Добавить настроение")
         print("0. Назад")
         choice = input("Выбор: ")
-        
+
         if choice == "1":
             name = input("Название настроения: ")
             desc = input("Описание (можно пропустить): ")
             add_mood(moods, get_next_mood_id(moods), name, desc)
         elif choice == "0":
             break
+
 
 def manage_factors(factors: List[Factor]) -> None:
     """Простое управление списком факторов."""
@@ -203,7 +223,7 @@ def manage_factors(factors: List[Factor]) -> None:
         print("1. Добавить фактор")
         print("0. Назад")
         choice = input("Выбор: ")
-        
+
         if choice == "1":
             name = input("Название фактора: ")
             cat = input("Категория (например, Работа, Здоровье): ")
@@ -211,13 +231,14 @@ def manage_factors(factors: List[Factor]) -> None:
         elif choice == "0":
             break
 
+
 def main() -> None:
     """Запустить главное меню приложения."""
     # Загрузка данных
     users = load_users(USERS_FILE)
     if not users:
         users = [User(1, "Denis", "")]
-        
+
     # Загрузка новых сущностей ДО загрузки записей
     moods = load_moods(MOODS_FILE)
     factors = load_factors(FACTORS_FILE)
@@ -260,11 +281,11 @@ def main() -> None:
             user = add_user(users, get_next_user_id(users), name, email)
             print(f"Добавлен пользователь: {user}")
             save_users(USERS_FILE, users)
-            
+
         elif choice == "9":
             manage_moods(moods)
             save_moods(MOODS_FILE, moods)
-            
+
         elif choice == "10":
             manage_factors(factors)
             save_factors(FACTORS_FILE, factors)

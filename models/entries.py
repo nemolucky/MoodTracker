@@ -42,16 +42,16 @@ class MoodEntry:
             f"{self.entry_date} | {self.user.name} | "
             f"{self.score}/10 | {self.get_status()}"
         )
-        
+
         mood_str = ""
         if self.mood:
             mood_str = f" | Настроение: {self.mood.name}"
-            
+
         factors_str = ""
         if self.factors:
             factor_names = ", ".join([f.name for f in self.factors])
             factors_str = f" | Факторы: {factor_names}"
-            
+
         return base_str + mood_str + factors_str
 
     @staticmethod
@@ -71,7 +71,9 @@ def add_mood_entry(
     factors: Optional[List[Factor]] = None,
 ) -> MoodEntry:
     """Создает новую запись и добавляет её в список."""
-    new_entry = MoodEntry(entry_id, entry_date, score, comment, user, mood, factors)
+    new_entry = MoodEntry(
+        entry_id, entry_date, score, comment, user, mood, factors
+    )
     entries.append(new_entry)
     return new_entry
 

@@ -4,8 +4,8 @@ from datetime import date
 from typing import List
 
 from models import MoodEntry, User
-from models.moods import Mood
 from models.factors import Factor
+from models.moods import Mood
 from models.users import find_user_by_id
 
 
@@ -41,7 +41,7 @@ def load_moods(filename: str) -> List[Mood]:
             raw_moods = json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         return []
-    
+
     return [Mood.from_data(raw_mood) for raw_mood in raw_moods]
 
 
@@ -62,7 +62,7 @@ def load_factors(filename: str) -> List[Factor]:
             raw_factors = json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         return []
-    
+
     return [Factor.from_data(raw_factor) for raw_factor in raw_factors]
 
 
@@ -76,8 +76,13 @@ def save_factors(filename: str, factors: List[Factor]) -> None:
         json.dump(raw_factors, file, ensure_ascii=False, indent=4)
 
 
-def load_entries(filename: str, users: List[User], moods: List[Mood], factors: List[Factor]) -> List[MoodEntry]:
-    """Загружает записи настроения, восстанавливая связи с пользователями, настроениями и факторами."""
+def load_entries(
+    filename: str,
+    users: List[User],
+    moods: List[Mood],
+    factors: List[Factor],
+) -> List[MoodEntry]:
+    """Загружает записи настроения со связями."""
     try:
         with open(filename, "r", encoding="utf-8") as file:
             raw_entries = json.load(file)
@@ -90,7 +95,7 @@ def load_entries(filename: str, users: List[User], moods: List[Mood], factors: L
         user = find_user_by_id(users, raw_entry["user_id"])
         if user is None:
             continue
-            
+
         # Восстановление настроения
         mood = None
         if raw_entry.get("mood_id"):
@@ -120,7 +125,7 @@ def load_entries(filename: str, users: List[User], moods: List[Mood], factors: L
 
 
 def save_entries(filename: str, entries: List[MoodEntry]) -> None:
-    """Сохраняет записи настроения в JSON-файл, включая ID настроения и факторов."""
+    """Сохраняет записи настроения в JSON-файл."""
     raw_entries = []
     for entry in entries:
         raw_entry = {
@@ -130,16 +135,16 @@ def save_entries(filename: str, entries: List[MoodEntry]) -> None:
             "score": entry.score,
             "comment": entry.comment,
         }
-        
+
         # Сохраняем ID настроения, если оно есть
         if entry.mood:
             raw_entry["mood_id"] = entry.mood.id
         else:
             raw_entry["mood_id"] = None
-            
+
         # Сохраняем список ID факторов
         raw_entry["factor_ids"] = [f.id for f in entry.factors]
-        
+
         raw_entries.append(raw_entry)
 
     with open(filename, "w", encoding="utf-8") as file:
