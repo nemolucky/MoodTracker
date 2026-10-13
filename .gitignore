@@ -4,4 +4,5 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 *.sqlite3
-task.pdf
+*.pdf
+*:Zone.Identifier
