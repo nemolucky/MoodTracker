@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Mood Tracker — Главная
+{% endblock %}
+
+{% block content %}
+    <div class="p-5 mb-4 bg-white rounded-3 shadow-sm">
+        <h1 class="display-5 fw-bold text-primary">Mood Tracker</h1>
+        <p class="lead col-md-8 text-muted">
+            Дневник эмоционального состояния и отслеживания настроения.
+        </p>
+        <hr class="my-4">
+        <p>Выберите интересующий раздел:</p>
+        <div class="d-flex gap-2">
+            <a href="{% url 'entries:list' %}" class="btn btn-primary btn-lg">Записи настроения</a>
+            <a href="{% url 'moods:list' %}" class="btn btn-outline-secondary btn-lg">Типы настроения</a>
+        </div>
+    </div>
+{% endblock %}
