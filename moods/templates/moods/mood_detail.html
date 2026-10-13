@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if mood %}
+        Mood Tracker — {{ mood.name }}
+    {% else %}
+        Настроение не найдено
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if mood %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h1 class="card-title h3 mb-3">{{ mood.name }}</h1>
+                <p class="card-text text-muted mb-4">{{ mood.description }}</p>
+                <a href="{% url 'moods:list' %}" class="btn btn-outline-secondary">
+                    &larr; к списку настроений
+                </a>
+            </div>
+        </div>
+
+        <h3 class="h4 mb-3">Записи с этим настроением:</h3>
+        <ul class="list-group shadow-sm">
+            {% for entry in related_entries %}
+                {% include "entries/includes/entry_card.html" %}
+            {% empty %}
+                <li class="list-group-item text-muted text-center py-3">
+                    Нет записей с этим настроением.
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="py-4">
+            <h1 class="text-danger">Настроение не найдено</h1>
+            <p>Тип настроения с таким идентификатором не существует.</p>
+            <a href="{% url 'moods:list' %}" class="btn btn-outline-secondary">
+                &larr; к списку настроений
+            </a>
+        </div>
+    {% endif %}
+{% endblock %}
