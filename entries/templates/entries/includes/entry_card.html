@@ -1,0 +1,17 @@
+<li class="list-group-item d-flex justify-content-between align-items-center">
+    <div>
+        <a href="{% url 'entries:detail' entry.id %}" class="fw-bold text-decoration-none">
+            {{ entry.entry_date }} — {{ entry.user.name }} ({{ entry.score }}/10)
+        </a>
+        {% if entry.comment %}
+            <div class="small text-muted">{{ entry.comment }}</div>
+        {% endif %}
+    </div>
+    {% if entry.score >= 7 %}
+        <span class="badge bg-success">{{ entry.get_status }}</span>
+    {% elif entry.score >= 4 %}
+        <span class="badge bg-warning text-dark">{{ entry.get_status }}</span>
+    {% else %}
+        <span class="badge bg-danger">{{ entry.get_status }}</span>
+    {% endif %}
+</li>

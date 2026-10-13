@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if entry %}
+        Mood Tracker — Запись №{{ entry.id }}
+    {% else %}
+        Запись не найдена
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if entry %}
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="card-title h3 mb-0">
+                        Запись №{{ entry.id }} от {{ entry.entry_date }}
+                    </h2>
+                    {% if entry.score >= 7 %}
+                        <span class="badge bg-success fs-6">{{ entry.get_status }}</span>
+                    {% elif entry.score >= 4 %}
+                        <span class="badge bg-warning text-dark fs-6">{{ entry.get_status }}</span>
+                    {% else %}
+                        <span class="badge bg-danger fs-6">{{ entry.get_status }}</span>
+                    {% endif %}
+                </div>
+
+                <dl class="row mb-4">
+                    <dt class="col-sm-3 text-muted">Пользователь:</dt>
+                    <dd class="col-sm-9 fw-semibold">
+                        {{ entry.user.name }}
+                        {% if entry.user.email %}
+                            <span class="text-muted fw-normal">({{ entry.user.email }})</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3 text-muted">Оценка настроения:</dt>
+                    <dd class="col-sm-9">
+                        <strong>{{ entry.score }}</strong> / 10
+                    </dd>
+
+                    <dt class="col-sm-3 text-muted">Тип настроения:</dt>
+                    <dd class="col-sm-9">
+                        {% if entry.mood %}
+                            <a href="{% url 'moods:detail' entry.mood.id %}" class="badge bg-primary text-decoration-none">
+                                {{ entry.mood.name }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">Не указано</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3 text-muted">Факторы влияния:</dt>
+                    <dd class="col-sm-9">
+                        {% for factor in entry.factors %}
+                            <span class="badge bg-light text-dark border me-1">{{ factor.name }}</span>
+                        {% empty %}
+                            <span class="text-muted">Не указаны</span>
+                        {% endfor %}
+                    </dd>
+
+                    <dt class="col-sm-3 text-muted">Комментарий:</dt>
+                    <dd class="col-sm-9">
+                        {{ entry.comment|default:"Без комментария" }}
+                    </dd>
+                </dl>
+
+                <a href="{% url 'entries:list' %}" class="btn btn-outline-secondary">
+                    &larr; к списку записей
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <div class="py-4">
+            <h1 class="text-danger">Запись не найдена</h1>
+            <p>Запись с указанным идентификатором отсутствует в системе.</p>
+            <a href="{% url 'entries:list' %}" class="btn btn-outline-secondary">
+                &larr; к списку записей
+            </a>
+        </div>
+    {% endif %}
+{% endblock %}

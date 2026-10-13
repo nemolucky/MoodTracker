@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Mood Tracker — Записи
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h2 mb-0">Записи настроения</h1>
+        <span class="badge bg-secondary">Всего записей: {{ entries|length }}</span>
+    </div>
+
+    <ul class="list-group shadow-sm">
+        {% for entry in entries %}
+            {% include "entries/includes/entry_card.html" %}
+        {% empty %}
+            <li class="list-group-item text-muted text-center py-4">
+                Записи настроения не найдены.
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
