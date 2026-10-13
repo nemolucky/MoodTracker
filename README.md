@@ -152,6 +152,8 @@ MoodTracker/
 ├── main.py
 ├── storage.py
 ├── utils.py
+├── .flake8
+├── pytest.ini
 │
 ├── moodtracker/
 │   ├── __init__.py
@@ -159,6 +161,12 @@ MoodTracker/
 │   ├── urls.py
 │   ├── asgi.py
 │   └── wsgi.py
+│
+├── templates/
+│   ├── base.html
+│   ├── 404.html
+│   └── includes/
+│       └── navigation.html
 │
 ├── homepage/
 │   ├── __init__.py
@@ -168,7 +176,15 @@ MoodTracker/
 │   ├── models.py
 │   ├── tests.py
 │   ├── urls.py
-│   └── views.py
+│   ├── views.py
+│   ├── static/
+│   │   └── homepage/
+│   │       ├── css/style.css
+│   │       ├── img/logo.png
+│   │       └── js/main.js
+│   └── templates/
+│       └── homepage/
+│           └── index.html
 │
 ├── entries/
 │   ├── __init__.py
@@ -178,7 +194,13 @@ MoodTracker/
 │   ├── models.py
 │   ├── tests.py
 │   ├── urls.py
-│   └── views.py
+│   ├── views.py
+│   └── templates/
+│       └── entries/
+│           ├── entry_list.html
+│           ├── entry_detail.html
+│           └── includes/
+│               └── entry_card.html
 │
 ├── moods/
 │   ├── __init__.py
@@ -188,7 +210,13 @@ MoodTracker/
 │   ├── models.py
 │   ├── tests.py
 │   ├── urls.py
-│   └── views.py
+│   ├── views.py
+│   └── templates/
+│       └── moods/
+│           ├── mood_list.html
+│           ├── mood_detail.html
+│           └── includes/
+│               └── mood_card.html
 │
 ├── models/
 │   ├── __init__.py
@@ -225,21 +253,31 @@ MoodTracker/
 * `urls.py` — маршрутизация верхнего уровня (подключение маршрутов приложений через `include()`, настройка `handler404`);
 * `asgi.py`, `wsgi.py` — точки взаимодействия с серверами.
 
+### `templates/`
+Общие шаблоны проекта:
+* `base.html` — базовый макет с разметкой, блоками `{% block title %}` и `{% block content %}`, подключением Bootstrap 5.3 CDN, собственного CSS и JS;
+* `404.html` — шаблон кастомной страницы ошибки 404;
+* `includes/navigation.html` — вынесенный включаемый шаблон навигационной панели с логотипом и ссылками `{% url %}`.
+
 ### `homepage/`
 Django-приложение, отвечающее за главную страницу:
-* `views.py` — вспомогательная функция `page()` (общий HTML-каркас с подключением Bootstrap 5.3 CDN и навигацией), view-функция главной страницы `index()` и обработчик ошибки `page_not_found()`;
-* `urls.py` — маршрут главной страницы.
+* `views.py` — view-функция главной страницы `index()` и обработчик ошибки `page_not_found()` с вызовом `render()`;
+* `urls.py` — маршрут главной страницы с пространством имён (`app_name = "homepage"`);
+* `templates/homepage/index.html` — шаблон главной страницы, наследующий `base.html`;
+* `static/homepage/` — статические файлы приложения (CSS `style.css`, логотип `logo.png`, скрипт `main.js`).
 
 ### `entries/`
 Django-приложение, отвечающее за записи настроения:
-* `views.py` — view-функции `entries()` (список) и `entry_detail()` (карточка записи);
-* `urls.py` — маршруты приложения;
+* `views.py` — view-функции `entries()` (список) и `entry_detail()` (карточка записи) с передачей данных через словарь контекста в `render()`;
+* `urls.py` — маршруты приложения с пространством имён (`app_name = "entries"`);
+* `templates/entries/` — шаблоны списка (`entry_list.html`), детальной страницы (`entry_detail.html`) и включаемый шаблон карточки (`includes/entry_card.html`);
 * `models.py` — Django-модели (будут заполнены в следующих практических работах).
 
 ### `moods/`
 Django-приложение, отвечающее за типы настроения:
-* `views.py` — view-функции `moods()` (список) и `mood_detail()` (карточка настроения);
-* `urls.py` — маршруты приложения;
+* `views.py` — view-функции `moods()` (список) и `mood_detail()` (карточка настроения со связанными записями) через `render()`;
+* `urls.py` — маршруты приложения с пространством имён (`app_name = "moods"`);
+* `templates/moods/` — шаблоны списка (`mood_list.html`), детальной страницы (`mood_detail.html`) и карточки (`includes/mood_card.html`);
 * `models.py` — Django-модели (будут заполнены в следующих практических работах).
 
 ### `models/`
@@ -314,19 +352,20 @@ git status
 
 ## Текущее состояние и план развития
 
-Реализовано (ПР5):
-* Django-проект и три Django-приложения (`homepage`, `entries`, `moods`);
-* двухуровневая маршрутизация URL с использованием `include()`;
-* view-функции и динамические маршруты (`<int:entry_id>/`, `<int:mood_id>/`);
-* отображение данных предметной области из JSON-хранилища средствами объектов ПР3;
-* кастомная обработка ошибки 404 (через `handler404` и явный возврат HTTP 404);
-* общий HTML-каркас и оформление интерфейса средствами Bootstrap 5.3 CDN;
-* сохранение работоспособности консольной версии и тестов ПР3.
+Реализовано (ПР6):
+* Django-шаблоны (DTL) и разделение структуры на базовый шаблон `templates/base.html`, дочерние страницы и включаемые шаблоны;
+* теги `{% extends %}`, `{% block %}`, `{% include %}`, `{% for %}`, `{% empty %}`, `{% if %}`;
+* использование фильтров шаблонов (`length`, `default`);
+* передача данных предметной области (`MoodEntry`, `Mood`, `Factor`, `User`) из JSON-хранилища через контекст `render()`;
+* именованные маршруты и пространства имён URL (`app_name = "homepage"`, `"entries"`, `"moods"`), генерация ссылок через `{% url %}`;
+* подключение статических файлов: собственный CSS (`style.css`), логотип (`logo.png`), клиентский JavaScript (`main.js`);
+* кастомный шаблон ошибки 404 (`404.html`) и обработчик `handler404`;
+* полный отказ от генерации HTML в Python-коде и удаление вспомогательной функции `page()`;
+* автоматизированные тесты моделей и веб-интерфейса (`pytest`), проверка PEP 8 (`flake8`).
 
 Планируется:
 * перенос сущностей `User`, `MoodEntry`, `Mood`, `Factor` в Django ORM;
 * подключение реляционной базы данных;
-* переход на шаблоны (`templates/`) и отказ от временной функции `page()`;
 * веб-формы создания и редактирования записей настроения (Django Forms);
 * реализация веб-сценариев фильтрации, поиска и сортировки;
 * разработка API;
