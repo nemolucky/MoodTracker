@@ -1,39 +1,70 @@
+"""Представления для работы с типами настроения (moods)."""
+import sqlite3
 from django.shortcuts import render
-
-from models.moods import find_mood_by_id
-from storage import load_entries, load_factors, load_moods, load_users
+from db.database import DB_PATH
 
 
 def moods(request):
-    """Отображает список типов настроения."""
-    moods_list = load_moods("data/moods.json")
-    context = {
-        "moods": moods_list,
-    }
-    return render(request, "moods/mood_list.html", context)
+    """Отображает список типов настроения из базы данных SQLite."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    moods_list = conn.execute(
+        """
+        SELECT
+            id,
+            name,
+            description
+        FROM moods
+        ORDER BY name;
+        """
+    ).fetchall()
+    conn.close()
+    return render(request, "moods/mood_list.html", {"moods": moods_list})
 
 
 def mood_detail(request, mood_id):
-    """Отображает информацию о настроении и связанные записи."""
-    moods_list = load_moods("data/moods.json")
-    mood = find_mood_by_id(moods_list, mood_id)
+    """Отображает информацию о настроении и связанные записи из SQLite."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    mood = conn.execute(
+        """
+        SELECT
+            id,
+            name,
+            description
+        FROM moods
+        WHERE id = ?;
+        """,
+        (mood_id,),
+    ).fetchone()
 
     related = []
     if mood is not None:
-        users = load_users("data/users.json")
-        factors = load_factors("data/factors.json")
-        entries_list = load_entries(
-            "data/entries.json", users, moods_list, factors
-        )
-        related = [e for e in entries_list if e.mood and e.mood.id == mood.id]
+        related = conn.execute(
+            """
+            SELECT
+                entries.id,
+                entries.entry_date,
+                entries.score,
+                entries.comment,
+                users.name AS user_name,
+                CASE
+                    WHEN entries.score >= 7 THEN 'Хороший день'
+                    WHEN entries.score >= 4 THEN 'Нейтральный день'
+                    ELSE 'Плохой день'
+                END AS status
+            FROM entries
+            JOIN users ON entries.user_id = users.id
+            WHERE entries.mood_id = ?
+            ORDER BY entries.entry_date DESC;
+            """,
+            (mood_id,),
+        ).fetchall()
 
-    context = {
-        "mood": mood,
-        "related_entries": related,
-    }
+    conn.close()
     return render(
         request,
         "moods/mood_detail.html",
-        context,
+        {"mood": mood, "related_entries": related},
         status=404 if mood is None else 200,
     )

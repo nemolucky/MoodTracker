@@ -1,17 +1,17 @@
 <li class="list-group-item d-flex justify-content-between align-items-center">
     <div>
         <a href="{% url 'entries:detail' entry.id %}" class="fw-bold text-decoration-none">
-            {{ entry.entry_date }} — {{ entry.user.name }} ({{ entry.score }}/10)
+            {{ entry.entry_date }} — {% if entry.user_name %}{{ entry.user_name }}{% else %}{{ entry.user.name }}{% endif %} ({{ entry.score }}/10)
         </a>
         {% if entry.comment %}
             <div class="small text-muted">{{ entry.comment }}</div>
         {% endif %}
     </div>
     {% if entry.score >= 7 %}
-        <span class="badge bg-success">{{ entry.get_status }}</span>
+        <span class="badge bg-success">{% if entry.status %}{{ entry.status }}{% else %}{{ entry.get_status }}{% endif %}</span>
     {% elif entry.score >= 4 %}
-        <span class="badge bg-warning text-dark">{{ entry.get_status }}</span>
+        <span class="badge bg-warning text-dark">{% if entry.status %}{{ entry.status }}{% else %}{{ entry.get_status }}{% endif %}</span>
     {% else %}
-        <span class="badge bg-danger">{{ entry.get_status }}</span>
+        <span class="badge bg-danger">{% if entry.status %}{{ entry.status }}{% else %}{{ entry.get_status }}{% endif %}</span>
     {% endif %}
 </li>

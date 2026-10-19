@@ -17,19 +17,21 @@
                         Запись №{{ entry.id }} от {{ entry.entry_date }}
                     </h2>
                     {% if entry.score >= 7 %}
-                        <span class="badge bg-success fs-6">{{ entry.get_status }}</span>
+                        <span class="badge bg-success fs-6">{% if entry.status %}{{ entry.status }}{% else %}{{ entry.get_status }}{% endif %}</span>
                     {% elif entry.score >= 4 %}
-                        <span class="badge bg-warning text-dark fs-6">{{ entry.get_status }}</span>
+                        <span class="badge bg-warning text-dark fs-6">{% if entry.status %}{{ entry.status }}{% else %}{{ entry.get_status }}{% endif %}</span>
                     {% else %}
-                        <span class="badge bg-danger fs-6">{{ entry.get_status }}</span>
+                        <span class="badge bg-danger fs-6">{% if entry.status %}{{ entry.status }}{% else %}{{ entry.get_status }}{% endif %}</span>
                     {% endif %}
                 </div>
 
                 <dl class="row mb-4">
                     <dt class="col-sm-3 text-muted">Пользователь:</dt>
                     <dd class="col-sm-9 fw-semibold">
-                        {{ entry.user.name }}
-                        {% if entry.user.email %}
+                        {% if entry.user_name %}{{ entry.user_name }}{% else %}{{ entry.user.name }}{% endif %}
+                        {% if entry.user_email %}
+                            <span class="text-muted fw-normal">({{ entry.user_email }})</span>
+                        {% elif entry.user.email %}
                             <span class="text-muted fw-normal">({{ entry.user.email }})</span>
                         {% endif %}
                     </dd>
@@ -41,7 +43,11 @@
 
                     <dt class="col-sm-3 text-muted">Тип настроения:</dt>
                     <dd class="col-sm-9">
-                        {% if entry.mood %}
+                        {% if entry.mood_id %}
+                            <a href="{% url 'moods:detail' entry.mood_id %}" class="badge bg-primary text-decoration-none">
+                                {{ entry.mood_name }}
+                            </a>
+                        {% elif entry.mood %}
                             <a href="{% url 'moods:detail' entry.mood.id %}" class="badge bg-primary text-decoration-none">
                                 {{ entry.mood.name }}
                             </a>
@@ -52,10 +58,14 @@
 
                     <dt class="col-sm-3 text-muted">Факторы влияния:</dt>
                     <dd class="col-sm-9">
-                        {% for factor in entry.factors %}
+                        {% for factor in factors %}
                             <span class="badge bg-light text-dark border me-1">{{ factor.name }}</span>
                         {% empty %}
-                            <span class="text-muted">Не указаны</span>
+                            {% for factor in entry.factors %}
+                                <span class="badge bg-light text-dark border me-1">{{ factor.name }}</span>
+                            {% empty %}
+                                <span class="text-muted">Не указаны</span>
+                            {% endfor %}
                         {% endfor %}
                     </dd>
 

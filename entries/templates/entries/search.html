@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Mood Tracker — Поиск по дате
+{% endblock %}
+
+{% block content %}
+    <div class="mb-4">
+        <h1 class="h2 mb-3">Поиск записей по дате</h1>
+        <p class="text-muted">
+            Выберите дату для поиска записей настроения и просмотра неиспользованных типов настроения.
+        </p>
+
+        <form method="get" class="row g-3 align-items-center mb-4">
+            <div class="col-auto">
+                <label for="date-input" class="col-form-label fw-semibold">Дата:</label>
+            </div>
+            <div class="col-auto">
+                <input
+                    type="date"
+                    id="date-input"
+                    name="date"
+                    value="{{ search_date }}"
+                    class="form-control"
+                    required
+                >
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Найти</button>
+                <a href="{% url 'entries:search' %}" class="btn btn-outline-secondary">Сбросить</a>
+            </div>
+        </form>
+    </div>
+
+    {% if search_date %}
+        <h2 class="h4 mb-3">Записи за {{ search_date }}:</h2>
+        <ul class="list-group shadow-sm mb-4">
+            {% for entry in entries %}
+                {% include "entries/includes/entry_card.html" %}
+            {% empty %}
+                <li class="list-group-item text-muted text-center py-3">
+                    Записи на указанную дату не найдены.
+                </li>
+            {% endfor %}
+        </ul>
+
+        <h2 class="h4 mb-3">Типы настроения, не зафиксированные на эту дату:</h2>
+        <div class="row g-3">
+            {% for mood in unused_moods %}
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="{% url 'moods:detail' mood.id %}" class="text-decoration-none">
+                                    {{ mood.name }}
+                                </a>
+                            </h5>
+                            <p class="card-text text-muted small mb-0">{{ mood.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <p class="text-muted">Все типы настроения зафиксированы в эту дату.</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

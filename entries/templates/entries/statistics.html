@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Mood Tracker — Статистика
+{% endblock %}
+
+{% block content %}
+    <h1 class="h2 mb-4">Статистика настроений</h1>
+
+    {% if overall %}
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small">Всего записей</div>
+                        <div class="display-6 fw-bold text-primary">{{ overall.total_entries }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small">Средняя оценка</div>
+                        <div class="display-6 fw-bold text-success">{{ overall.avg_score|default:"—" }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small">Минимальная оценка</div>
+                        <div class="display-6 fw-bold text-danger">{{ overall.min_score|default:"—" }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <div class="text-muted small">Максимальная оценка</div>
+                        <div class="display-6 fw-bold text-info">{{ overall.max_score|default:"—" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <h2 class="h4 mb-3">Распределение записей по типам настроения</h2>
+    <div class="table-responsive shadow-sm mb-4">
+        <table class="table table-hover table-bordered mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Тип настроения</th>
+                    <th class="text-center">Количество записей</th>
+                    <th class="text-center">Средний балл</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in mood_stats %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'moods:detail' item.mood_id %}" class="fw-semibold text-decoration-none">
+                                {{ item.mood_name }}
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-primary rounded-pill">{{ item.entries_count }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if item.avg_score %}
+                                <span class="fw-bold">{{ item.avg_score }}</span> / 10
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-3">
+                            Данные отсутствуют.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="h4 mb-3">Факторы влияния по категориям</h2>
+    <div class="row g-3">
+        {% for cat in category_stats %}
+            <div class="col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title h6 mb-1">{{ cat.category }}</h5>
+                        <p class="card-text text-muted mb-0">
+                            Факторов: <strong>{{ cat.factors_count }}</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <p class="text-muted">Данные о категориях отсутствуют.</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
