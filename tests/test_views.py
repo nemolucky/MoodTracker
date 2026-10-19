@@ -107,3 +107,42 @@ def test_page_not_found_view_directly():
     assert response.status_code == 404
     content = response.content.decode("utf-8")
     assert "404 — страница не найдена" in content
+
+
+def test_navigation_contains_statistics():
+    """Меню навигации содержит ссылку на раздел статистики."""
+    client = Client()
+    response = client.get(reverse("homepage:index"))
+    content = response.content.decode("utf-8")
+    assert reverse("entries:statistics") in content
+
+
+def test_entries_search_view_without_date():
+    """Страница поиска без параметра date открывается с формой ввода."""
+    client = Client()
+    response = client.get(reverse("entries:search"))
+    assert response.status_code == 200
+    content = response.content.decode("utf-8")
+    assert "Поиск записей по дате" in content
+    assert 'name="date"' in content
+
+
+def test_entries_search_view_with_date():
+    """Страница поиска с датой находит записи и неиспользованные настроения."""
+    client = Client()
+    response = client.get(reverse("entries:search") + "?date=2026-09-13")
+    assert response.status_code == 200
+    content = response.content.decode("utf-8")
+    assert "Отличная встреча с друзьями" in content
+    assert "Типы настроения, не зафиксированные на эту дату:" in content
+
+
+def test_entries_statistics_view():
+    """Страница статистики возвращает статус 200 и аналитические блоки."""
+    client = Client()
+    response = client.get(reverse("entries:statistics"))
+    assert response.status_code == 200
+    content = response.content.decode("utf-8")
+    assert "Статистика настроений" in content
+    assert "Распределение записей по типам настроения" in content
+    assert "Факторы влияния по категориям" in content
