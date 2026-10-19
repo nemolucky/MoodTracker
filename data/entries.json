@@ -5,8 +5,8 @@
         "entry_date": "2026-09-13",
         "score": 8,
         "comment": "Отличная встреча с друзьями",
-        "mood_id": null,
-        "factor_ids": []
+        "mood_id": 1,
+        "factor_ids": [1, 2]
     },
     {
         "id": 2,
@@ -14,7 +14,7 @@
         "entry_date": "2026-09-14",
         "score": 5,
         "comment": "Обычный рабочий день",
-        "mood_id": null,
+        "mood_id": 2,
         "factor_ids": []
     },
     {
@@ -23,7 +23,7 @@
         "entry_date": "2026-09-15",
         "score": 3,
         "comment": "Много задач, устал",
-        "mood_id": null,
+        "mood_id": 3,
         "factor_ids": []
     },
     {
@@ -32,7 +32,7 @@
         "entry_date": "2020-09-09",
         "score": 8,
         "comment": "йцу",
-        "mood_id": null,
+        "mood_id": 4,
         "factor_ids": []
     }
 ]
