@@ -11,10 +11,14 @@
             <a href="{% url 'entries:search' %}" class="btn btn-outline-primary me-2">
                 Поиск по дате
             </a>
-            <span class="badge bg-secondary fs-6">Всего записей: {{ entries|length }}</span>
+            <span class="badge bg-secondary fs-6">Всего записей: {{ page_obj.paginator.count }}</span>
         </div>
     </div>
 
+    <form method="get" class="mb-3">
+        {{ form.as_p }}
+        <button class="btn btn-primary">Применить</button>
+    </form>
     <ul class="list-group shadow-sm">
         {% for entry in entries %}
             {% include "entries/includes/entry_card.html" %}
@@ -24,4 +28,15 @@
             </li>
         {% endfor %}
     </ul>
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Страницы" class="mt-3">
+        {% if page_obj.has_previous %}
+        <a href="{% querystring page=page_obj.previous_page_number %}">Назад</a>
+        {% endif %}
+        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        {% if page_obj.has_next %}
+        <a href="{% querystring page=page_obj.next_page_number %}">Далее</a>
+        {% endif %}
+    </nav>
+    {% endif %}
 {% endblock %}

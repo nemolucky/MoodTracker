@@ -6,3 +6,6 @@ exclude =
     .pytest_cache,
     .mypy_cache
 max-line-length = 79
+
+per-file-ignores =
+    */migrations/*.py:E501
