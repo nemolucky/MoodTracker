@@ -5,6 +5,13 @@
 {% endblock %}
 
 {% block content %}
+<section class="mb-4">
+    <h2 class="h4">Статусы записей</h2>
+    <p>Общие показатели настроения учитывают только опубликованные записи.</p>
+    <ul>{% for row in status_stats %}
+        <li>{% if row.publication_status == 'published' %}Опубликована{% elif row.publication_status == 'draft' %}Черновик{% else %}В архиве{% endif %}: {{ row.entries_count }}</li>
+    {% empty %}<li>Нет записей</li>{% endfor %}</ul>
+</section>
     <h1 class="h2 mb-4">Статистика настроений</h1>
 
     {% if overall %}

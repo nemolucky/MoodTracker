@@ -9,3 +9,9 @@ urlpatterns = [
 ]
 
 handler404 = "homepage.views.page_not_found"
+
+
+from django.conf import settings  # noqa: E402
+
+if settings.DEBUG:
+    urlpatterns += [path("__debug__/", include("debug_toolbar.urls"))]

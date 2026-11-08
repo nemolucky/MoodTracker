@@ -1,11 +1,11 @@
 <li class="list-group-item d-flex justify-content-between align-items-center">
     <div>
-        <a href="{% url 'moods:detail' mood.id %}" class="fw-bold text-decoration-none">
+        <a href="{{ mood.get_absolute_url }}" class="fw-bold text-decoration-none">
             {{ mood.name }}
         </a>
         <div class="small text-muted">{{ mood.description }}</div>
     </div>
-    <a href="{% url 'moods:detail' mood.id %}" class="btn btn-sm btn-outline-primary">
+    <a href="{{ mood.get_absolute_url }}" class="btn btn-sm btn-outline-primary">
         Подробнее
     </a>
 </li>
