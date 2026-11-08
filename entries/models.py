@@ -3,28 +3,58 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
+class EntryQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(publication_status=MoodEntry.Status.PUBLISHED)
+
+    def on_date(self, date):
+        return self.filter(entry_date=date)
+
+    def with_relations(self):
+        return self.select_related("user", "mood")
+
+
 class User(models.Model):
-    name = models.CharField(max_length=100)
-    email = models.EmailField(blank=True, default="")
+    name = models.CharField("Имя", max_length=100)
+    email = models.EmailField("Почта", blank=True, default="")
+
+    class Meta:
+        verbose_name = "Владелец дневника"
+        verbose_name_plural = "Владельцы дневников"
 
     def __str__(self):
         return self.name
 
 
 class MoodEntry(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Черновик"
+        PUBLISHED = "published", "Опубликована"
+        ARCHIVED = "archived", "В архиве"
+
+    publication_status = models.CharField(
+        "Статус публикации", max_length=12, choices=Status.choices,
+        default=Status.PUBLISHED, db_index=True)
+    objects = EntryQuerySet.as_manager()
+
     user = models.ForeignKey(
-        User, on_delete=models.PROTECT, related_name="entries")
+        User, verbose_name="Владелец", on_delete=models.PROTECT,
+        related_name="entries")
     mood = models.ForeignKey(
-        "moods.Mood", on_delete=models.SET_NULL,
+        "moods.Mood", verbose_name="Настроение", on_delete=models.SET_NULL,
         null=True, blank=True, related_name="entries")
     factors = models.ManyToManyField(
-        "moods.Factor", blank=True, related_name="entries")
-    entry_date = models.DateField(db_index=True)
+        "moods.Factor", verbose_name="Факторы", blank=True,
+        related_name="entries")
+    entry_date = models.DateField("Дата", db_index=True)
     score = models.PositiveSmallIntegerField(
+        "Оценка",
         validators=[MinValueValidator(0), MaxValueValidator(10)])
-    comment = models.TextField(blank=True, default="")
+    comment = models.TextField("Комментарий", blank=True, default="")
 
     class Meta:
+        verbose_name = "Запись настроения"
+        verbose_name_plural = "Записи настроения"
         ordering = ["-entry_date", "-pk"]
         constraints = [models.CheckConstraint(
             condition=models.Q(score__gte=0, score__lte=10),
