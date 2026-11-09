@@ -1,190 +1,76 @@
-"""Представления для работы с записями настроения (entries)."""
-import sqlite3
+"""Списки, поиск и аналитика дневника через Django ORM."""
+from django.core.paginator import Paginator
+from django.db.models import Avg, Count, F, Max, Min, Q
+from django.db.models.functions import Round
 from django.shortcuts import render
-from db.database import DB_PATH
+
+from moods.models import Factor, Mood
+from .forms import EntryFilterForm
+from .models import MoodEntry
+
+
+SORTS = {"": ("-entry_date", "-pk"), "date": ("entry_date", "pk"),
+         "score": ("-score", "-entry_date", "-pk"),
+         "user": ("user__name", "-entry_date", "-pk")}
 
 
 def entries(request):
-    """Отображает список записей настроения из базы данных SQLite."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    entries_list = conn.execute(
-        """
-        SELECT
-            entries.id,
-            entries.entry_date,
-            entries.score,
-            entries.comment,
-            users.name AS user_name,
-            moods.name AS mood_name,
-            CASE
-                WHEN entries.score >= 7 THEN 'Хороший день'
-                WHEN entries.score >= 4 THEN 'Нейтральный день'
-                ELSE 'Плохой день'
-            END AS status
-        FROM entries
-        JOIN users ON entries.user_id = users.id
-        LEFT JOIN moods ON entries.mood_id = moods.id
-        ORDER BY entries.entry_date DESC;
-        """
-    ).fetchall()
-    conn.close()
-    return render(
-        request, "entries/entry_list.html", {"entries": entries_list}
-    )
+    form = EntryFilterForm(request.GET)
+    rows = MoodEntry.objects.select_related("user", "mood")
+    if form.is_valid():
+        data = form.cleaned_data
+        if data["date"]:
+            rows = rows.filter(entry_date=data["date"])
+        if data["mood"]:
+            rows = rows.filter(mood=data["mood"])
+        if data["min_score"] is not None:
+            rows = rows.filter(score__gte=data["min_score"])
+        if data["q"]:
+            rows = rows.filter(
+                Q(comment__icontains=data["q"]) |
+                Q(user__name__icontains=data["q"]) |
+                Q(mood__name__icontains=data["q"]))
+        rows = rows.order_by(*SORTS[data["sort"]])
+    else:
+        rows = rows.none()
+    page = Paginator(rows, 3).get_page(request.GET.get("page"))
+    return render(request, "entries/entry_list.html", {
+        "entries": page, "page_obj": page, "form": form})
 
 
 def entry_detail(request, entry_id):
-    """Отображает детальную информацию о записи настроения из SQLite."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    entry = conn.execute(
-        """
-        SELECT
-            entries.id,
-            entries.entry_date,
-            entries.score,
-            entries.comment,
-            users.name AS user_name,
-            users.email AS user_email,
-            moods.id AS mood_id,
-            moods.name AS mood_name,
-            CASE
-                WHEN entries.score >= 7 THEN 'Хороший день'
-                WHEN entries.score >= 4 THEN 'Нейтральный день'
-                ELSE 'Плохой день'
-            END AS status
-        FROM entries
-        JOIN users ON entries.user_id = users.id
-        LEFT JOIN moods ON entries.mood_id = moods.id
-        WHERE entries.id = ?;
-        """,
-        (entry_id,),
-    ).fetchone()
-
-    factors = []
-    if entry is not None:
-        factors = conn.execute(
-            """
-            SELECT factors.id, factors.name, factors.category
-            FROM factors
-            JOIN entry_factors ON factors.id = entry_factors.factor_id
-            WHERE entry_factors.entry_id = ?
-            ORDER BY factors.name;
-            """,
-            (entry_id,),
-        ).fetchall()
-
-    conn.close()
-    return render(
-        request,
-        "entries/entry_detail.html",
-        {"entry": entry, "factors": factors},
-        status=404 if entry is None else 200,
-    )
+    entry = MoodEntry.objects.select_related(
+        "user", "mood").prefetch_related("factors").filter(pk=entry_id).first()
+    return render(request, "entries/entry_detail.html", {
+        "entry": entry, "factors": entry.factors.all() if entry else []},
+        status=200 if entry else 404)
 
 
 def search_by_date(request):
-    """Поиск записей и неиспользованных настроений на выбранную дату."""
-    search_date = request.GET.get("date", "").strip()
-    found_entries = []
-    unused_moods = []
-
-    if search_date:
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        found_entries = conn.execute(
-            """
-            SELECT
-                entries.id,
-                entries.entry_date,
-                entries.score,
-                entries.comment,
-                users.name AS user_name,
-                moods.name AS mood_name,
-                CASE
-                    WHEN entries.score >= 7 THEN 'Хороший день'
-                    WHEN entries.score >= 4 THEN 'Нейтральный день'
-                    ELSE 'Плохой день'
-                END AS status
-            FROM entries
-            JOIN users ON entries.user_id = users.id
-            LEFT JOIN moods ON entries.mood_id = moods.id
-            WHERE entries.entry_date = ?
-            ORDER BY entries.id;
-            """,
-            (search_date,),
-        ).fetchall()
-
-        unused_moods = conn.execute(
-            """
-            SELECT moods.id, moods.name, moods.description
-            FROM moods
-            WHERE moods.id NOT IN (
-                SELECT entries.mood_id
-                FROM entries
-                WHERE entries.entry_date = ?
-                  AND entries.mood_id IS NOT NULL
-            )
-            ORDER BY moods.name;
-            """,
-            (search_date,),
-        ).fetchall()
-        conn.close()
-
-    context = {
-        "search_date": search_date,
-        "entries": found_entries,
-        "unused_moods": unused_moods,
-    }
-    return render(request, "entries/search.html", context)
+    form = EntryFilterForm(request.GET)
+    found, unused = MoodEntry.objects.none(), Mood.objects.none()
+    if form.is_valid() and form.cleaned_data["date"]:
+        date = form.cleaned_data["date"]
+        found = MoodEntry.objects.filter(entry_date=date).select_related(
+            "user", "mood").order_by("pk")
+        used = found.exclude(mood=None).values_list("mood_id", flat=True)
+        unused = Mood.objects.exclude(pk__in=used).order_by("name")
+    return render(request, "entries/search.html", {
+        "search_date": request.GET.get("date", ""), "entries": found,
+        "unused_moods": unused, "errors": form.errors})
 
 
 def statistics(request):
-    """Отображает аналитическую статистику по записям и настроениям."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-
-    mood_stats = conn.execute(
-        """
-        SELECT
-            moods.id AS mood_id,
-            moods.name AS mood_name,
-            COUNT(entries.id) AS entries_count,
-            ROUND(AVG(entries.score), 1) AS avg_score
-        FROM moods
-        LEFT JOIN entries ON moods.id = entries.mood_id
-        GROUP BY moods.id, moods.name
-        ORDER BY entries_count DESC, moods.name ASC;
-        """
-    ).fetchall()
-
-    overall = conn.execute(
-        """
-        SELECT
-            COUNT(*) AS total_entries,
-            ROUND(AVG(score), 1) AS avg_score,
-            MIN(score) AS min_score,
-            MAX(score) AS max_score
-        FROM entries;
-        """
-    ).fetchone()
-
-    category_stats = conn.execute(
-        """
-        SELECT
-            category,
-            COUNT(*) AS factors_count
-        FROM factors
-        GROUP BY category
-        ORDER BY factors_count DESC, category ASC;
-        """
-    ).fetchall()
-
-    conn.close()
-    context = {
-        "mood_stats": mood_stats,
-        "overall": overall,
-        "category_stats": category_stats,
-    }
-    return render(request, "entries/statistics.html", context)
+    overall = MoodEntry.objects.aggregate(
+        total_entries=Count("pk"), avg_score=Round(Avg("score"), 1),
+        min_score=Min("score"), max_score=Max("score"))
+    moods = Mood.objects.annotate(
+        mood_id=F("pk"), mood_name=F("name"),
+        entries_count=Count("entries"),
+        avg_score=Round(Avg("entries__score"), 1)
+    ).order_by("-entries_count", "name")
+    categories = Factor.objects.values("category").annotate(
+        factors_count=Count("pk")).order_by("-factors_count", "category")
+    return render(request, "entries/statistics.html", {
+        "overall": overall, "mood_stats": moods,
+        "category_stats": categories})

@@ -45,7 +45,7 @@
                     <dd class="col-sm-9">
                         {% if entry.mood_id %}
                             <a href="{% url 'moods:detail' entry.mood_id %}" class="badge bg-primary text-decoration-none">
-                                {{ entry.mood_name }}
+                                {{ entry.mood.name }}
                             </a>
                         {% elif entry.mood %}
                             <a href="{% url 'moods:detail' entry.mood.id %}" class="badge bg-primary text-decoration-none">
@@ -61,7 +61,7 @@
                         {% for factor in factors %}
                             <span class="badge bg-light text-dark border me-1">{{ factor.name }}</span>
                         {% empty %}
-                            {% for factor in entry.factors %}
+                            {% for factor in entry.factors.all %}
                                 <span class="badge bg-light text-dark border me-1">{{ factor.name }}</span>
                             {% empty %}
                                 <span class="text-muted">Не указаны</span>
