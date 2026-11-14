@@ -79,3 +79,41 @@ def statistics(request):
         "status_stats": MoodEntry.objects.values(
             "publication_status").annotate(
             entries_count=Count("pk")).order_by("publication_status")})
+
+
+from django.contrib.auth.decorators import permission_required  # noqa: E402
+from django.shortcuts import get_object_or_404, redirect  # noqa: E402
+from django.views.decorators.http import require_http_methods  # noqa: E402
+from .forms import EntryForm  # noqa: E402
+
+
+@permission_required("entries.add_moodentry", raise_exception=True)
+@require_http_methods(["GET", "POST"])
+def entry_create(request):
+    form = EntryForm(request.POST if request.method == "POST" else None)
+    if request.method == "POST" and form.is_valid():
+        entry = form.save()
+        return redirect("entries:detail", entry_id=entry.pk)
+    return render(request, "entries/entry_form.html", {
+        "form": form, "title": "Создать запись"})
+
+
+@permission_required("entries.change_moodentry", raise_exception=True)
+@require_http_methods(["GET", "POST"])
+def entry_edit(request, entry_id):
+    entry = get_object_or_404(MoodEntry.objects.published(), pk=entry_id)
+    form = EntryForm(
+        request.POST if request.method == "POST" else None, instance=entry)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("entries:detail", entry_id=entry.pk)
+    return render(request, "entries/entry_form.html", {
+        "form": form, "title": "Редактировать запись", "entry": entry})
+
+
+@permission_required("entries.change_moodentry", raise_exception=True)
+@require_http_methods(["POST"])
+def entry_archive(request, entry_id):
+    entry = get_object_or_404(MoodEntry, pk=entry_id)
+    entry.archive()
+    return redirect("entries:list")

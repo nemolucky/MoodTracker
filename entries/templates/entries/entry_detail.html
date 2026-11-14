@@ -10,6 +10,13 @@
 
 {% block content %}
     {% if entry %}
+        {% if perms.entries.change_moodentry %}
+        <a class="btn btn-primary mb-3" href="{% url 'entries:edit' entry.pk %}">Редактировать</a>
+        <form method="post" action="{% url 'entries:archive' entry.pk %}" class="mb-3">
+            {% csrf_token %}
+            <button class="btn btn-outline-danger" type="submit">В архив</button>
+        </form>
+        {% endif %}
         <div class="card shadow-sm">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">

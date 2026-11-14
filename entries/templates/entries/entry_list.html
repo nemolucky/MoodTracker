@@ -5,6 +5,9 @@
 {% endblock %}
 
 {% block content %}
+{% if perms.entries.add_moodentry %}
+<a class="btn btn-primary mb-3" href="{% url 'entries:create' %}">Создать запись</a>
+{% endif %}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h2 mb-0">Записи настроения</h1>
         <div>
