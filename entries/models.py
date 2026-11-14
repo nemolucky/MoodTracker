@@ -63,6 +63,10 @@ class MoodEntry(models.Model):
     def __str__(self):
         return f"{self.entry_date}: {self.score}/10"
 
+    def archive(self):
+        self.publication_status = self.Status.ARCHIVED
+        self.save(update_fields=["publication_status"])
+
     @property
     def status(self):
         if self.score >= 7:
